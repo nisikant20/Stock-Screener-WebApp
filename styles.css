@@ -1,0 +1,76 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1a1e2d;
+    color: white;
+    text-align: center;
+}
+
+.capital-box {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.quantity-dropdown {
+    width: 60px;
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.quantity-input {
+    background-color: #1a1e2d; /* Match table color */
+    color: white; /* Ensure text is visible */
+    border: 1px solid #333; /* Subtle border */
+    padding: 5px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.quantity-input:focus {
+    outline: none;
+    border-color: #4a90e2; /* Highlight border when selected */
+}
+
+.dashboard-button {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.dashboard-button:hover {
+    background-color: #357ac9;
+}
+
+.dashboard-container {
+    width: 90%;
+    margin: auto;
+}
+
+.stock-summary {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.card {
+    background-color: #2d3b50;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+}

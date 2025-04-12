@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Screener</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            text-align: center;
+        }
+        table {
+            width: 80%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid white;
+            text-align: left;
+        }
+        .clickable {
+            color: cyan;
+            cursor: pointer;
+        }
+        .capital-box {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #2d3748;
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .heatmap-btn {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .heatmap-btn:hover {
+            background-color: #e68900;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Stock Market Screener</h2>
+    <p id="currentDate" class="text-lg font-semibold text-gray-300"></p> <!-- Display Current Date -->
+
+    <!-- Heatmap Button -->
+    <button class="heatmap-btn" onclick="openHeatmap()">📊 View Heatmap</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Select</th>
+                <th>Symbol</th>
+                <th>Price (₹)</th>
+                <th>Change (%)</th>
+                <th>Volume</th>
+                <th>Market Cap (₹)</th>
+                <th>Quantity</th> <!-- New Quantity Column -->
+            </tr>
+        </thead>
+        <tbody id="stockTableBody" class="bg-gray-800">
+            <!-- MySQL data will be inserted here dynamically -->
+        </tbody>
+    </table>
+
+    <!-- Estimated Capital Required -->
+    <div class="capital-box">
+        <p><strong>Estimated Capital Required:</strong> <span id="totalCapital">₹0</span></p>
+    </div>
+
+    <!-- Chatbot Popup -->
+    <div id="chatContainer" class="hidden fixed bottom-10 right-10 bg-gray-800 p-4 rounded-lg shadow-lg w-96">
+        <h2 class="text-xl font-bold">Stock Details</h2>
+        <p id="stockDetails" class="text-sm mt-2"></p>
+        <button onclick="closeChat()" class="mt-4 px-4 py-2 bg-red-500 rounded-md">Close</button>
+    </div>
+
+    <script>
+        async function fetchStockData() {
+            try {
+                const response = await fetch("/api/stock/all");
+                if (!response.ok) throw new Error("Failed to fetch data");
+
+                const stocks = await response.json();
+                let tableBody = "";
+
+                stocks.forEach(stock => {
+                    tableBody += `
+                        <tr class="cursor-pointer hover:bg-gray-700" onclick="showStockDetails('${stock.symbol}', ${stock.price}, ${stock.changePercent}, ${stock.volume}, ${stock.marketCap})">
+                            <td class="p-2"><input type="checkbox" class="stockCheckbox" value="${stock.symbol}" data-price="${stock.price}"></td>
+                            <td class="p-2 text-blue-400 underline clickable" ondblclick="searchStock('${stock.symbol}')">${stock.symbol}</td>
+                            <td class="p-2">₹${stock.price.toFixed(2)}</td>
+                            <td class="p-2">${stock.changePercent.toFixed(2)}%</td>
+                            <td class="p-2">${stock.volume.toLocaleString()}</td>
+                            <td class="p-2">₹${stock.marketCap.toLocaleString()}</td>
+                            <td class="p-2">
+                                <select class="quantity-dropdown">
+                                    <option value="1">1</option>
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById("stockTableBody").innerHTML = tableBody;
+
+                // Display the current date
+                const currentDate = new Date().toLocaleDateString();
+                document.getElementById("currentDate").innerText = `Today's Date: ${currentDate}`;
+
+                // Add event listeners to checkboxes and quantity dropdowns
+                document.querySelectorAll(".stockCheckbox").forEach(checkbox => {
+                    checkbox.addEventListener("change", updateTotalCapital);
+                });
+                document.querySelectorAll(".quantity-dropdown").forEach(dropdown => {
+                    dropdown.addEventListener("change", updateTotalCapital);
+                });
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error fetching stock data.");
+            }
+        }
+
+        function updateTotalCapital() {
+            let totalCapital = 0;
+            document.querySelectorAll(".stockCheckbox").forEach(checkbox => {
+                if (checkbox.checked) {
+                    const price = parseFloat(checkbox.getAttribute("data-price"));
+                    const quantity = parseInt(checkbox.closest("tr").querySelector(".quantity-dropdown").value);
+                    totalCapital += price * quantity;
+                }
+            });
+            document.getElementById("totalCapital").innerText = `₹${totalCapital.toLocaleString()}`;
+        }
+
+        function showStockDetails(symbol, price, changePercent, volume, marketCap) {
+            const details = `
+                Symbol: ${symbol} <br>
+                Current Price: ₹${price.toFixed(2)} <br>
+                Change: ${changePercent.toFixed(2)}% <br>
+                Volume: ${volume.toLocaleString()} <br>
+                Market Cap: ₹${marketCap.toLocaleString()} <br>
+                <br>
+                ChatGPT Analysis: <br>
+                ${generateChatGPTResponse(symbol)}
+            `;
+
+            document.getElementById("stockDetails").innerHTML = details;
+            document.getElementById("chatContainer").classList.remove("hidden");
+        }
+
+        function closeChat() {
+            document.getElementById("chatContainer").classList.add("hidden");
+        }
+
+        function generateChatGPTResponse(symbol) {
+            const responses = {
+                "RELIANCE": "Reliance Industries is India's largest company by revenue, with a strong presence in petrochemicals, telecom, and retail.",
+                "TCS": "TCS (Tata Consultancy Services) is a leading IT services company, known for software solutions and digital transformation.",
+                "HDFCBANK": "HDFC Bank is one of India’s leading private sector banks, known for financial services and credit products."
+            };
+
+            return responses[symbol] || "This is a top-performing stock. Investors should watch for trends and market conditions.";
+        }
+
+        // Fetch data when the page loads
+        window.onload = fetchStockData;
+
+        function searchStock(stockName) {
+            const googleSearchURL = `https://www.google.com/search?q=${stockName} stock`;
+            window.open(googleSearchURL, '_blank');
+        }
+
+        function openHeatmap() {
+            const heatmapURL = "https://www.tradingview.com/heatmap/stock/#%7B%22dataSource%22%3A%22NIFTY50%22%2C%22blockColor%22%3A%22change%22%2C%22blockSize%22%3A%22market_cap_basic%22%2C%22grouping%22%3A%22sector%22%7D";
+            window.open(heatmapURL, '_blank');
+        }
+    </script>
+
+</body>
+</html>
